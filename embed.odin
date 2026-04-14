@@ -48,7 +48,7 @@ file_as_code_now := proc(image_path: string, image_data: []byte) -> string {
 	return s.to_string(builder)
 }
 
-file_as_code_compile_time := proc(image_path: string, image_data: []byte) -> string {
+file_as_code_compile_time := proc(image_path: string) -> string {
 	image_ext := fp.ext(image_path)
 	image_base_name := fp.base(image_path)
 	image_name, _ := s.substring_to(image_base_name, s.index(image_base_name, image_ext))
@@ -59,7 +59,12 @@ file_as_code_compile_time := proc(image_path: string, image_data: []byte) -> str
 	fmt.sbprintfln(&builder, "package assets\n")
 	fmt.sbprintfln(&builder, "%v_PATH :: `%v`", image_name_upper, image_path)
 	fmt.sbprintfln(&builder, "%v_EXT :: \"%v\"\n", image_name_upper, image_ext)
-	fmt.sbprintfln(&builder, "%v_DATA :: #load(`..\\..\\` + %v_PATH)", image_name_upper, image_name_upper)
+	fmt.sbprintfln(
+		&builder,
+		"%v_DATA :: #load(`..\\..\\` + %v_PATH)",
+		image_name_upper,
+		image_name_upper,
+	)
 	fmt.sbprintfln(&builder, "%v_PTR := raw_data(%v_DATA)", image_name_upper, image_name_upper)
 	fmt.sbprintfln(&builder, "%v_SIZE := i32(len(%v_DATA))", image_name_upper, image_name_upper)
 
@@ -67,21 +72,26 @@ file_as_code_compile_time := proc(image_path: string, image_data: []byte) -> str
 }
 
 export_file_as_code :: proc(input_path, output_path: string, now: bool) {
-	input_data, input_err := os.read_entire_file_from_path(input_path, context.temp_allocator)
-	if input_err != os.ERROR_NONE {
-		msg := os.error_string(input_err)
-		fmt.eprintfln("Could not read file %s: %s", input_path, msg)
-		return
-	}
-
-	input_path, _ := os.clean_path(input_path, context.temp_allocator)
-
 	code: string
 	if input_ext := fp.ext(input_path); slice.contains(FILE_EXT, input_ext) {
 		if now {
+			input_data, input_err := os.read_entire_file_from_path(
+				input_path,
+				context.temp_allocator,
+			)
+			if input_err != os.ERROR_NONE {
+				msg := os.error_string(input_err)
+				fmt.eprintfln("Could not read file %s: %s", input_path, msg)
+				return
+			}
+
+			input_path, _ := os.clean_path(input_path, context.temp_allocator)
+
 			code = file_as_code_now(input_path, input_data)
 		} else {
-			code = file_as_code_compile_time(input_path, input_data)
+			input_path, _ := os.clean_path(input_path, context.temp_allocator)
+
+			code = file_as_code_compile_time(input_path)
 		}
 	} else {
 		fmt.eprintfln("Extention is unknown: %s", input_ext)
@@ -164,7 +174,7 @@ main :: proc() {
 	Options :: struct {
 		input:  string `args:"pos=0,required" usage:"Input directory"`,
 		output: string `args:"pos=1,required" usage:"Output directory"`,
-		now: bool `usage:"Load files now instead of at compile time"`,
+		now:    bool `usage:"Load files now instead of at compile time"`,
 	}
 
 	opt: Options
