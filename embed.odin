@@ -53,16 +53,15 @@ file_as_code_compile_time := proc(image_path: string, image_data: []byte) -> str
 	image_base_name := fp.base(image_path)
 	image_name, _ := s.substring_to(image_base_name, s.index(image_base_name, image_ext))
 	image_name_upper := s.to_upper(image_name)
-	image_size := len(image_data)
 
 	builder := s.builder_make(context.temp_allocator)
 
 	fmt.sbprintfln(&builder, "package assets\n")
 	fmt.sbprintfln(&builder, "%v_PATH :: `%v`", image_name_upper, image_path)
 	fmt.sbprintfln(&builder, "%v_EXT :: \"%v\"\n", image_name_upper, image_ext)
-	fmt.sbprintfln(&builder, "%v_SIZE := %v", image_name_upper, image_size)
 	fmt.sbprintfln(&builder, "%v_DATA :: #load(`..\\..\\` + %v_PATH)", image_name_upper, image_name_upper)
 	fmt.sbprintfln(&builder, "%v_PTR := raw_data(%v_DATA)", image_name_upper, image_name_upper)
+	fmt.sbprintfln(&builder, "%v_SIZE := i32(len(%v_DATA))", image_name_upper, image_name_upper)
 
 	return s.to_string(builder)
 }
