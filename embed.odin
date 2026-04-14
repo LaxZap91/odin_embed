@@ -22,10 +22,9 @@ file_as_code_now := proc(image_path: string, image_data: []byte) -> string {
 
 	fmt.sbprintfln(&builder, "package assets\n")
 	fmt.sbprintfln(&builder, "%v_PATH :: `%v`", image_name_upper, image_path)
-	fmt.sbprintfln(&builder, "%v_EXT :: \"%v\"", image_name_upper, image_ext)
+	fmt.sbprintfln(&builder, "%v_EXT :: \"%v\"\n", image_name_upper, image_ext)
 	fmt.sbprintfln(&builder, "%v_SIZE :: %v", image_name_upper, image_size)
-	fmt.sbprintfln(&builder, "@(rodata)")
-	fmt.sbprintfln(&builder, "%v_DATA := [%v]byte{{", image_name_upper, image_size)
+	fmt.sbprintfln(&builder, "%v_DATA :: []byte{{", image_name_upper)
 
 	for b, i in image_data {
 		if i % DATA_WIDTH == 0 {
@@ -44,7 +43,7 @@ file_as_code_now := proc(image_path: string, image_data: []byte) -> string {
 	}
 
 	fmt.sbprintfln(&builder, "}}")
-	fmt.sbprintfln(&builder, "%v_PTR := raw_data(&%v_DATA)", image_name_upper, image_name_upper)
+	fmt.sbprintfln(&builder, "%v_PTR := raw_data(%v_DATA)", image_name_upper, image_name_upper)
 
 	return s.to_string(builder)
 }
@@ -61,10 +60,9 @@ file_as_code_compile_time := proc(image_path: string, image_data: []byte) -> str
 	fmt.sbprintfln(&builder, "package assets\n")
 	fmt.sbprintfln(&builder, "%v_PATH :: `%v`", image_name_upper, image_path)
 	fmt.sbprintfln(&builder, "%v_EXT :: \"%v\"\n", image_name_upper, image_ext)
-	fmt.sbprintfln(&builder, "@(rodata)")
-	fmt.sbprintfln(&builder, "%v_DATA := #load(`..\\..\\` + %v_PATH)", image_name_upper, image_name_upper)
+	fmt.sbprintfln(&builder, "%v_SIZE := %v", image_name_upper, image_size)
+	fmt.sbprintfln(&builder, "%v_DATA :: #load(`..\\..\\` + %v_PATH)", image_name_upper, image_name_upper)
 	fmt.sbprintfln(&builder, "%v_PTR := raw_data(%v_DATA)", image_name_upper, image_name_upper)
-	fmt.sbprintfln(&builder, "%v_SIZE := i32(len(%v_DATA))", image_name_upper, image_name_upper)
 
 	return s.to_string(builder)
 }
